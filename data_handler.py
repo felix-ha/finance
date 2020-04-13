@@ -6,6 +6,11 @@ import re
 def get_current_value():
     """
     Parsing current index value of S&P500 from yahoo finance
+    
+    Usage:     
+    price_current = get_current_value()
+    print(price_current)
+
     """
     url = "https://finance.yahoo.com/quote/%5EGSPC"
     html = urlopen(url)
@@ -20,5 +25,5 @@ def get_current_value():
 
 
 if __name__ == '__main__':
-    price_current = get_current_value()
-    print(price_current)
+    
+    
