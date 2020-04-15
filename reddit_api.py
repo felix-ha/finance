@@ -8,6 +8,8 @@ import praw
 import pandas as pd
 
 
+def get_praw_instance():
+    return praw.Reddit()
 
 def get_pusshift_data(before, after):
     url = 'https://api.pushshift.io/reddit/submission/search/?after='+str(after)+'&before='+str(before) +'&sort_type=score&sort=desc&subreddit=worldnews'
@@ -57,55 +59,30 @@ def get_reddit_data(before, after, reddit):
 
 
 
-
-reddit = praw.Reddit()
-
-
-
-
-start_date = date(2019, 1, 1)
-end_date = date(2020, 1, 1)
-delta = timedelta(days=1)
-
-
-
-first = True
-while start_date <= end_date:
-    year = int(start_date.strftime("%Y"))
-    day = int(start_date.strftime("%d"))
-    month = int(start_date.strftime("%m"))
-    after = int(get_timestamp(date(year, month, day)))  
+if __name__ == '__main__':
+    reddit = get_praw_instance()
+        
     
-    start_date += delta
-    
-    year = int(start_date.strftime("%Y"))
-    day = int(start_date.strftime("%d"))
-    month = int(start_date.strftime("%m"))
-    before = int(get_timestamp(date(year, month, day)))
+    start_date = date(2019, 5, 24)
+    end_date = date(2020, 1, 1)
+    delta = timedelta(days=1)
     
     
-    df = get_reddit_data(before, after, reddit)
-    df.to_csv(r'data/'+str(get_date(after))+'.csv')
-
-
     
-#    if first:
-#        df = get_reddit_data(before, after, reddit)
-#        first = False
-#    else: 
-#        df = pd.concat([df, get_reddit_data(before, after, reddit)], ignore_index=True)
-    
-    
-#_timestamp = df["created"].apply(get_date)
-#df = df.assign(timestamp = _timestamp)
-
-#_weekday = df["timestamp"].apply(get_weekday)
-#df = df.assign(weekday = _weekday)
-
-print('done')
-#print(df.shape)
-
-#df.to_csv('data.csv')
-
-
-    
+    first = True
+    while start_date <= end_date:
+        year = int(start_date.strftime("%Y"))
+        day = int(start_date.strftime("%d"))
+        month = int(start_date.strftime("%m"))
+        after = int(get_timestamp(date(year, month, day)))  
+        
+        start_date += delta
+        
+        year = int(start_date.strftime("%Y"))
+        day = int(start_date.strftime("%d"))
+        month = int(start_date.strftime("%m"))
+        before = int(get_timestamp(date(year, month, day)))
+        
+        
+        df = get_reddit_data(before, after, reddit)
+        df.to_csv(r'data/'+str(get_date(after))+'.csv')
