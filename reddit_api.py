@@ -1,3 +1,8 @@
+"""
+Loading data from reddit: Saving a .csv file per day 
+in the folder for the subreddit chosen
+"""
+
 import datetime
 from datetime import date, timedelta
 import calendar 
