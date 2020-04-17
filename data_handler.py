@@ -128,19 +128,42 @@ def get_data(start_date, end_date, subreddit):
     
     # Merging to data frames
     df_final = pd.merge(df_all_subreddits, df_stock, on='Date', how='inner')
-    df_final = df_final[['title', 'Target', 'DifferenceRelative']]
+    df_final = df_final[['title', 'Target', 'DifferenceRelative', 'Date']]
+    
+    
+    
+    #Collapse Titles into one observation
+    df_collapsed_titles = pd.DataFrame().reindex_like(df_final).dropna(axis='rows')   
+    
+    for date_curr in df_final['Date'].unique():
+        df_curr = df_final[df_final['Date'] == date_curr]
+        titles = ' '.join(df_curr['title'].values)
+        
+        df_collapsed_titles = df_collapsed_titles.append({'title': titles, 
+                                    'Target': df_curr['Target'].iloc[0],
+                                    'DifferenceRelative': df_curr['DifferenceRelative'].iloc[0],
+                                    'Date': df_curr['Date'].iloc[0]}, ignore_index=True)
+
+    
+   
+    
     
     #As stocks are traded only monday - friday only these days should occour 
     #after the join:
     #print(df_final['weekday'].unique())
     
     
-    return df_final
+    return df_collapsed_titles
 
 
 if __name__ == '__main__':
     df = get_data(start_date = date(2019, 1, 1), 
-                  end_date =  date(2019, 1, 31), 
+                  end_date =  date(2019, 3, 31), 
                   subreddit = 'worldnews')
+    
+    
+    
+    
+    
 
     
