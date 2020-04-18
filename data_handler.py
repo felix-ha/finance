@@ -113,7 +113,8 @@ def get_data(start_date, end_date, subreddit):
     df_all_subreddits = df_all_subreddits[df_all_subreddits['Date'] >= start_date]
     df_all_subreddits = df_all_subreddits[df_all_subreddits['Date'] <= end_date]
     
-    df_all_subreddits = df_all_subreddits[df_all_subreddits['subreddit'] == subreddit]
+    if subreddit is not None: 
+        df_all_subreddits = df_all_subreddits[df_all_subreddits['subreddit'] == subreddit]
  
     
     #print(df_all_subreddits.shape)
