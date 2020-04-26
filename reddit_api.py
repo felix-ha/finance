@@ -11,6 +11,7 @@ import json
 import requests
 import praw
 import pandas as pd
+import time
 
 
 def get_praw_instance():
@@ -88,6 +89,12 @@ if __name__ == '__main__':
         month = int(start_date.strftime("%m"))
         before = int(get_timestamp(date(year, month, day)))
         
+        try:
+            df = get_reddit_data(before, after, reddit)
+        except:
+            print('retry... \n')
+            time.sleep(60)
+            df = get_reddit_data(before, after, reddit)
         
         df = get_reddit_data(before, after, reddit)
         df.to_csv(r'data/'+str(get_date(after))+'.csv')
