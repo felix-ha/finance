@@ -6,6 +6,7 @@ from reddit_api import get_date, get_weekday
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from datetime import date, timedelta
+import pickle
 
 
 def get_current_value():
@@ -161,6 +162,8 @@ if __name__ == '__main__':
     df = get_data(start_date = date(2019, 1, 1), 
                   end_date =  date(2019, 3, 31), 
                   subreddit = 'worldnews')
+    
+    df.to_pickle(r'temp\data.pkl')
     
     
     
