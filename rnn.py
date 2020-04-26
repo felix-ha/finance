@@ -11,6 +11,7 @@ import re
 from bs4 import BeautifulSoup
 
 from sklearn.metrics import accuracy_score
+from sklearn import metrics
 
 def sentence_to_words(review):
     nltk.download("stopwords", quiet=True)
@@ -26,15 +27,17 @@ def sentence_to_words(review):
 
 
 
-df = pd.read_pickle('temp/data.pkl')
-
-
 pad = 500
 vocab_size = 5000
 
+
+df = pd.read_pickle('temp/data.pkl')
 print('transform sentences to words')
 _title_words = df["title"].apply(sentence_to_words)
 df = df.assign(words = _title_words) 
+df.to_pickle(r'temp\data.pkl')
+
+df = pd.read_pickle('temp/data.pkl')
 
 
 
@@ -96,7 +99,7 @@ y = df['Target'].values
 
 
 from sklearn.model_selection import train_test_split
-X, X_val, y, y_val = train_test_split(X, y, test_size=0.15, random_state=42)
+X, X_val, y, y_val = train_test_split(X, y, test_size=0.1, random_state=1, stratify=y)
 
 
 
@@ -155,7 +158,7 @@ train_sample_X = torch.from_numpy(X).long()
 # Build the dataset
 train_sample_ds = torch.utils.data.TensorDataset(train_sample_X, train_sample_y)
 # Build the dataloader
-train_sample_dl = torch.utils.data.DataLoader(train_sample_ds, batch_size=20)
+train_sample_dl = torch.utils.data.DataLoader(train_sample_ds, batch_size=50)
 
 
 
@@ -189,27 +192,25 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = LSTMClassifier(32, 100, vocab_size).to(device)
 optimizer = optim.Adam(model.parameters())
 loss_fn = torch.nn.BCELoss()
+train(model, train_sample_dl, 120, optimizer, loss_fn, device)
 
-train(model, train_sample_dl, 30, optimizer, loss_fn, device)
+model.eval()
+y_prob_val = model.forward(torch.tensor(X_val).long()).detach().numpy()
+y_prob_train = model.forward(torch.tensor(X).long()).detach().numpy()
 
 
-
-
-y_pred = model.forward(torch.tensor(X_val).long()).detach().numpy()
-y_pred = np.where(y_pred > 0.5, 1, 0)
-accuracy = accuracy_score(y_true=y_val, y_pred=y_pred)
-
-accuracy_benchmark = np.mean(y)
-print("\nBenchmark accuray   : {:.5f}".format(accuracy_benchmark))
-print("Validation accuray  : {:.5f}\n".format(accuracy))
+df_result_val = pd.DataFrame(data = {'y_true': y_val, 'y_prob': y_prob_val})
+df_result_train = pd.DataFrame(data = {'y_true': y, 'y_prob': y_prob_train})
+df_result_val.to_pickle('temp/result_val.pkl')
+df_result_train.to_pickle('temp/result_train.pkl')
 
 
 
 
 
 
-test_review = 'Trump says China Hong Kong'
-test_data = sentence_to_words(test_review)
-test_data, test_data_len = convert_and_pad(word_dict, test_data, pad=pad)
-test_data = torch.tensor(np.array([test_data])).long()
-y_hat = model.forward(test_data)
+#test_review = 'Trump says China Hong Kong'
+#test_data = sentence_to_words(test_review)
+#test_data, test_data_len = convert_and_pad(word_dict, test_data, pad=pad)
+#test_data = torch.tensor(np.array([test_data])).long()
+#y_hat = model.forward(test_data)
