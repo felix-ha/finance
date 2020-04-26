@@ -1,3 +1,7 @@
+"""
+LSTM Network with word embedding
+"""
+
 import pandas as pd
 
 import numpy as np
