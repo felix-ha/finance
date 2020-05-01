@@ -3,3 +3,7 @@
 *.png
 *.pkl
 *.txt
+*.vocab
+*.feat
+*.npy
+data/aclImdb/README
