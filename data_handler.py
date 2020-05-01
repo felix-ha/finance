@@ -357,13 +357,13 @@ def get_word_vectors(words, word2vec_model):
 def get_word2vec(df, vocab_size, seq_len):
     _title_words = df['text'].apply(sentence_to_words)
     df = df.assign(words = _title_words)
-    _words_padded = df['words'].apply(pad_sentence_of_words, pad=pad)
+    _words_padded = df['words'].apply(pad_sentence_of_words, pad=seq_len)
     df = df.assign(words_padded = _words_padded)
     
     # the empty string is used in padding if the sentence is too short
     # this string is converted with word2vec, maybe it is better to set the
     # word vector to zero. 
-    word2vec_model = Word2Vec(df['words_padded'].values, size=dummy_dim, min_count=1)
+    word2vec_model = Word2Vec(df['words_padded'].values, size=vocab_size, min_count=1)
   
     _word_vectors = df['words_padded'].apply(get_word_vectors, word2vec_model=word2vec_model)
     df = df.assign(word_vectors = _word_vectors)
