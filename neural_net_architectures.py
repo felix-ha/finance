@@ -1,5 +1,8 @@
 import torch.nn as nn
-import torch.optim as optim
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+import numpy as np
+
 
 
 class FC_2_Layers_Binary_Output(nn.Module):
@@ -60,10 +63,66 @@ class RNN(nn.Module):
 
         return output
            
+    
+def training_SGD(model, X_train_T, y_train_T, X_val_T, y_val_T,
+                 lr, n_epochs, batch_size):
+    
+    training_losses = np.empty(n_epochs)
+    valid_losses = np.empty(n_epochs)
+    
+    train_ds = TensorDataset(X_train_T, y_train_T)
+    train_dl = DataLoader(train_ds, batch_size=batch_size)  
+    
+    valid_ds = TensorDataset(X_val_T, y_val_T)
+    valid_dl = DataLoader(valid_ds, batch_size=batch_size * 2)
+    
+    loss_func = nn.BCELoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr = lr)   
+   
+    
+    model.train()
+    for epoch in range(n_epochs):
+        training_loss = 0
+        for X_batch, y_batch in train_dl:
+            optimizer.zero_grad()
+            # Forward pass
+            y_pred = model(X_batch)
+            # Compute Loss
+            loss = loss_func(y_pred.squeeze(), y_batch)
+            training_loss += loss.item()
+           
+            # Backward pass
+            loss.backward()
+            optimizer.step()
+            
+        model.eval()
+        valid_loss = 0
+        with torch.no_grad():
+            for X_batch, y_batch in valid_dl:
+                y_pred = model(X_batch)
+                loss = loss_func(y_pred.squeeze(), y_batch) 
+                valid_loss += loss.item()
+                
+            
+        training_loss_epoch = training_loss / len(train_dl)
+        valid_loss_epoch = valid_loss / len(valid_dl)
+        
+        training_losses[epoch] = training_loss_epoch
+        valid_losses[epoch] = valid_loss_epoch
+        
+        
+        print('Epoch {}: train loss: {:.4} valid loss: {:.4}'
+              .format(epoch, training_loss_epoch, valid_loss_epoch))  
+        
+    return training_losses, valid_losses
+      
+
+  
+
         
 def training_full_batch_SGD(model, X_train_T, y_train_T, lr,  n_epochs):
     criterion = nn.BCELoss()
-    optimizer = optim.SGD(model.parameters(), lr = lr)   
+    optimizer = torch.optim.SGD(model.parameters(), lr = lr)   
    
     
     model.train()
@@ -81,7 +140,7 @@ def training_full_batch_SGD(model, X_train_T, y_train_T, lr,  n_epochs):
         
 def training_full_batch_SGD_RNN(model, X_train_T, y_train_T, hidden_0, lr,  n_epochs):
     criterion = nn.BCELoss()
-    optimizer = optim.SGD(model.parameters(), lr = lr)   
+    optimizer = torch.optim.SGD(model.parameters(), lr = lr)   
    
     
     model.train()
