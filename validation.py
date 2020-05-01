@@ -2,12 +2,53 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
-
+plt.style.use('ggplot')
+import pickle
 from sklearn.metrics import accuracy_score, roc_curve, auc
 from sklearn.calibration import calibration_curve
 
 
-def plot_hist_box(df_result, name):
+
+def plot_hist(df_train, df_valid):
+    fig = plt.figure(figsize=(12, 10))
+
+    # Histogram
+    plt.subplot(1, 2, 1)
+    df_0 = df_train[df_train['y_true'] == 0]
+    df_1 = df_train[df_train['y_true'] == 1]
+    
+    sns.distplot(df_0['y_prob'] , color="red", label="y_prob 0", bins=np.arange(0,1.1,0.05))
+    ax = sns.distplot(df_1['y_prob'] , color="blue", label="y_prob 1", bins=np.arange(0,1.1,0.05))
+    
+  
+    plt.title('training ', fontsize=10)
+    plt.legend(loc="upper left")
+    
+   
+    
+    # Histogram
+    plt.subplot(1, 2, 2)
+    df_0 = df_valid[df_valid['y_true'] == 0]
+    df_1 = df_valid[df_valid['y_true'] == 1]
+    
+    sns.distplot(df_0['y_prob'] , color="red", label="y_prob 0", bins=np.arange(0,1.1,0.05))
+    ax = sns.distplot(df_1['y_prob'] , color="blue", label="y_prob 1", bins=np.arange(0,1.1,0.05))
+    
+    plt.title('validation ', fontsize=10)
+
+    plt.legend(loc="upper left")
+    
+    
+    
+    #fig.title('title', fontsize=10)
+    fig.savefig('plots/stat_summary.png', dpi=300, bbox_inches='tight')
+    
+    
+
+
+
+
+def plot_box(df_result, name):
     y_true = df_result['y_true']
     y_prob = df_result['y_prob']
     
@@ -18,26 +59,6 @@ def plot_hist_box(df_result, name):
     auroc = auc(fpr, tpr)
     
     accuracy_benchmark = np.mean(y_true)
-    
-    #print("\nBenchmark accuray   : {:.5f}".format(accuracy_benchmark))
-    #print("Validation accuray  : {:.5f}".format(accuracy))
-    #print("Validation auc    : {:.5f}\n".format(auroc))
-    
-    
-    
-    # Histogram
-    df_0 = df_result[df_result['y_true'] == 0]
-    df_1 = df_result[df_result['y_true'] == 1]
-    
-    sns.distplot(df_0['y_prob'] , color="red", label="y_prob 0", bins=np.arange(0,1.1,0.01))
-    ax = sns.distplot(df_1['y_prob'] , color="blue", label="y_prob 1", bins=np.arange(0,1.1,0.01))
-    
-    fig = ax.get_figure()
-    #plt.title('Title ', fontsize=10)
-    fig.suptitle(name, fontsize=10)
-    plt.legend()
-    plt.show()
-    fig.savefig('plots/histogram_' + name +'.png', dpi=300, bbox_inches='tight')
     
     
     # Boxplot
@@ -90,21 +111,67 @@ def calibration_plot(y_true_train, y_prob_train, y_true_val, y_prob_val, n_bins)
     fig.savefig('plots/calib_train.png', bbox_inches='tight')
     
     
+def plot_losses(training_losses, valid_losses):
+    fig = plt.figure(figsize=(10, 10))
+    
+    x = range(len(training_losses))
+    
+    plt.plot(x, training_losses, 'b', label='training')
+    plt.plot(x, valid_losses, 'r', label='validation')
+    plt.title('Training summary')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(loc="upper left")
+    
+    fig.savefig('plots/training_summary.png', bbox_inches='tight')
+    
+    
 def run_validation(n_bins):
-    df_result_train = pd.read_pickle('temp/result_train.pkl')
+    with open(r'temp\result.pkl', 'rb') as pick:
+        data_dict = pickle.load(pick)
+              
+    
+    df_result_train = data_dict['df_result_train']
     y_true_train = df_result_train['y_true']
     y_prob_train = df_result_train['y_prob']
     name_train = 'Train'
     
-    df_result_val = pd.read_pickle('temp/result_val.pkl')
+    df_result_val = data_dict['df_result_val']
     y_true_val = df_result_val['y_true']
     y_prob_val = df_result_val['y_prob']
     name_val = 'Validation'
     
-    plot_hist_box(df_result_train, name_train)
-    plot_hist_box(df_result_val, name_val)
-    calibration_plot(y_true_train, y_prob_train, y_true_val, y_prob_val, n_bins=n_bins)    
+
+    
+    plot_hist(df_result_train, df_result_val)
+    plot_box(df_result_train, name_train)
+    plot_box(df_result_val, name_val)
+    calibration_plot(y_true_train, y_prob_train, y_true_val, y_prob_val, n_bins=n_bins) 
+    
+    try:
+        training_losses = data_dict['training_losses']
+        valid_losses = data_dict['valid_losses']
+        plot_losses(training_losses, valid_losses)
+    except:
+        print("no losses found, no plot for losses created")
 
 if __name__ == '__main__':
     run_validation(10)
 
+
+#from matplotlib import pyplot as plt
+#plt.style.use('ggplot')#
+
+#x = range(training_epochs)
+
+#plt.subplot(2, 1, 1)
+#plt.plot(x, losses, 'b')
+#plt.title('Training summary')
+#plt.ylabel('loss')
+
+#plt.subplot(2, 1, 2)
+#plt.plot(x, test_acc, 'b')
+#plt.xlabel('epochs')
+#plt.ylabel('training accuracy')
+
+#plt.savefig('training_summary.png', dpi=500)
