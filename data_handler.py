@@ -1,6 +1,7 @@
 import re
 import os
 import glob
+import pickle
 import pandas as pd
 import numpy as np
 from reddit_api import get_date, get_weekday
@@ -409,13 +410,18 @@ if __name__ == '__main__':
     #vocab_size = dummy_dim = 5
     #X, y = get_one_hot_dummies(df, vocab_size, seq_len)
     
-    
-    np.save(r'temp\X.npy', X)
-    np.save(r'temp\y.npy', y)
-    
-    #X = np.load(r'temp\X.npy')
-    #y = np.load(r'temp\y.npy')
-    
+    data_dict = {'X':X, 'y':y}
+
+    with open(r'temp\Xy.pkl', 'wb') as pick:
+        pickle.dump(data_dict, pick)
+
+
+    with open(r'temp\Xy.pkl', 'rb') as pick:
+        data_dict = pickle.load(pick)
+        
+    X = data_dict['X']        
+    y = data_dict['y']
+
     
     
     
