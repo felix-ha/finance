@@ -16,11 +16,11 @@ from data_handler import get_bag_of_words, get_imdb_data
 
 # Create basic data frame that contains text and target
 max_features = 250
-df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class=1000)  
-df.to_pickle(r'temp\data.pkl')
+#df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class=1000)  
+#df.to_pickle(r'temp\data.pkl')
 
 # Start feature enineering
-df = pd.read_pickle(r'temp\data.pkl')
+df = pd.read_pickle(r'temp\data_imdb_full.pkl')
 # Bag of words
 X, y, feature_names = get_bag_of_words(df, max_features = max_features)
 
@@ -42,14 +42,14 @@ feature_names = data_dict['feature_names']
 
 # Model 
 
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.05, random_state=185, stratify=y)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.25, random_state=185, stratify=y)
 
 
 #max_leaf_nodes = 16
 #model = DecisionTreeClassifier(random_state=0, max_leaf_nodes=max_leaf_nodes).fit(X_train, y_train)
 
 model = GradientBoostingClassifier(loss='deviance', learning_rate=0.05,
-                                   n_estimators=150, subsample=0.8,
+                                   n_estimators=100, subsample=0.8,
                                    criterion='friedman_mse', 
                                    min_samples_split=2, min_samples_leaf=1,
                                    min_weight_fraction_leaf=0.0,
