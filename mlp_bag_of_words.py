@@ -7,15 +7,24 @@ from torch import from_numpy
 
 from neural_net_architectures import FC_2_Layers_Binary_Output, training_SGD
 from validation import run_validation
+from data_handler import get_bag_of_words
 import pickle
 
 max_features = 250
+#df = pd.read_pickle(r'temp\data_imdb_full.pkl')
+#X, y, feature_names = get_bag_of_words(df, max_features = max_features)
+
+#data_dict = {'X':X, 'y':y}
+
+#with open(r'temp\Xy.pkl', 'wb') as pick:
+#    pickle.dump(data_dict, pick)
+    
 with open(r'temp\Xy.pkl', 'rb') as pick:
     data_dict = pickle.load(pick)
     
 X = data_dict['X'].toarray()        
 y = data_dict['y']
-feature_names = data_dict['feature_names']
+
 
 train_size = 0.8
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=1-train_size, random_state=1, stratify=y)
@@ -27,10 +36,10 @@ X_val_T = from_numpy(X_val).float()
 y_val_T = from_numpy(y_val).float()
 
 
-model = FC_2_Layers_Binary_Output(max_features, 200, 75)
+model = FC_2_Layers_Binary_Output(max_features, 200, 75, 0.5)
 
 training_losses, valid_losses = training_SGD(model, X_train_T, y_train_T,  X_val_T, y_val_T, 
-             lr = 0.1, n_epochs=2, batch_size = 500)
+             lr = 0.1, n_epochs=20, batch_size = 250)
     
     
 model.eval()
@@ -54,4 +63,4 @@ with open(r'temp\result.pkl', 'wb') as pick:
 
 
 
-#run_validation(n_bins = 10)
+run_validation(n_bins = 10)
