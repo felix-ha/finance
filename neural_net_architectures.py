@@ -6,7 +6,7 @@ import numpy as np
 
 
 class FC_2_Layers_Binary_Output(nn.Module):
-        def __init__(self, input_size, hidden_size_1, hidden_size_2):
+        def __init__(self, input_size, hidden_size_1, hidden_size_2, drop_p):
             super(FC_2_Layers_Binary_Output, self).__init__()
             self.input_size = input_size
             self.hidden_size_1  = hidden_size_1
@@ -14,9 +14,11 @@ class FC_2_Layers_Binary_Output(nn.Module):
             
             self.fc1 = nn.Linear(self.input_size,self.hidden_size_1)
             self.relu1 = nn.ReLU()
+            self.drop1 = nn.Dropout(p=drop_p)
                     
             self.fc2 = nn.Linear(self.hidden_size_1, self.hidden_size_2)
-            self.relu2 = nn.ReLU()          
+            self.relu2 = nn.ReLU()   
+            self.drop2 = nn.Dropout(p=drop_p)
             
             self.fc3 = nn.Linear(self.hidden_size_2, 1)         
            
@@ -25,11 +27,13 @@ class FC_2_Layers_Binary_Output(nn.Module):
         def forward(self, x):
             hidden1 = self.fc1(x)
             relu1 = self.relu1(hidden1)
+            drop1 = self.drop1(relu1)
             
-            hidden2 = self.fc2(relu1)
+            hidden2 = self.fc2(drop1)
             relu2 = self.relu2(hidden2)
+            drop2 = self.drop1(relu2)
             
-            output = self.fc3(relu2)
+            output = self.fc3(drop2)
             output = self.sigmoid(output)
             return output
         
