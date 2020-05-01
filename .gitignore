@@ -6,4 +6,5 @@
 *.vocab
 *.feat
 *.npy
+*.kv
 data/aclImdb/README

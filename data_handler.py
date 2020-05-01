@@ -17,6 +17,9 @@ import re
 from bs4 import BeautifulSoup
 from collections import Counter
 from gensim.models import Word2Vec
+from gensim.models import KeyedVectors
+import gensim.downloader as api
+
 
 
 def read_imdb_data(data_dir, N_per_class):
@@ -39,7 +42,7 @@ def read_imdb_data(data_dir, N_per_class):
             for f in files:
                 counter += 1
 
-                if counter > N_per_class:
+                if N_per_class is not None and counter > N_per_class:
                     break
 
                 with open(f, encoding='utf8') as review:
@@ -372,6 +375,36 @@ def get_word2vec(df, vocab_size, seq_len):
     y = df['target'].values
     
     return X, y
+
+
+def get_word2vec_pretrained(df, vocab_size, seq_len, pretrained_model_name = "glove-wiki-gigaword-50"):
+    _title_words = df['text'].apply(sentence_to_words)
+    df = df.assign(words = _title_words)
+    _words_padded = df['words'].apply(pad_sentence_of_words, pad=seq_len)
+    df = df.assign(words_padded = _words_padded)
+    
+    # the empty string is used in padding if the sentence is too short
+    # this string is converted with word2vec, maybe it is better to set the
+    # word vector to zero.         
+    model_2  = Word2Vec(size=vocab_size, min_count=1)
+    model_2.build_vocab(df['words_padded'].values)
+    total_examples = model_2.corpus_count
+    
+    model = api.load(pretrained_model_name)
+    model_path = r'temp\wordvectors.kv'
+    model.save_word2vec_format(model_path)
+    
+    model_2.build_vocab([list(model.vocab.keys())], update=True)
+    model_2.intersect_word2vec_format(model_path, binary=False, lockf=1.0)
+    model_2.train(df['words_padded'].values, total_examples=total_examples, epochs=model_2.iter)
+  
+    _word_vectors = df['words_padded'].apply(get_word_vectors, word2vec_model=model_2)
+    df = df.assign(word_vectors = _word_vectors)
+         
+    X = np.stack(df['word_vectors'].values)
+    y = df['target'].values
+    
+    return X, y
     
 
 
@@ -379,13 +412,13 @@ if __name__ == '__main__':
     
     # Create basic data frame that contains text and target
     
-    df = get_reddit_data(start_date = date(2018, 1, 1), 
-                  end_date =  date(2018, 4, 28), 
-                  subreddit = 'worldnews',
-                  ticker = '^GSPC')
+    #df = get_reddit_data(start_date = date(2018, 1, 1), 
+    #              end_date =  date(2018, 4, 28), 
+    #              subreddit = 'worldnews',
+    #              ticker = '^GSPC')
        
     
-    #df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class=50)  
+    df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class=5)  
     
     df.to_pickle(r'temp\data.pkl')
     
