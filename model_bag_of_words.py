@@ -1,56 +1,54 @@
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer
+import pickle
 
 
 #from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 
 from validation import run_validation
+from data_handler import get_bag_of_words, get_imdb_data
 
 
-df = pd.read_pickle('temp/data.pkl')
 
-def get_bag_of_words(df, max_features):
-    vect = CountVectorizer(max_features=max_features, stop_words="english")
-    vect.fit(df['title'].values)
-    
-    
-    print("Vocabulary size: {}".format(len(vect.vocabulary_)))
-    #print("Vocabulary content:\n {}".format(vect.vocabulary_))
-    
-    
-    bag_of_words = vect.transform(df['title'].values)
-    print("bag_of_words: {}".format(repr(bag_of_words)))
-    print("Dense representation of bag_of_words:\n{}".format(
-    bag_of_words.toarray()))
-    
-    
-    feature_names = vect.get_feature_names()
-    print("Number of features: {}".format(len(feature_names)))
-    print("Features (first 20):\n{}".format(feature_names[0:20]))
-    
-    
-    
-    X = bag_of_words
-    y = df['Target'].values
-    
-    return X, y, feature_names
+# Data Handling
+
+# Create basic data frame that contains text and target
+max_features = 250
+df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class=1000)  
+df.to_pickle(r'temp\data.pkl')
+
+# Start feature enineering
+df = pd.read_pickle(r'temp\data.pkl')
+# Bag of words
+X, y, feature_names = get_bag_of_words(df, max_features = max_features)
+
+# Save / load
+data_dict = {'X':X, 'y':y, 'feature_names':feature_names}
+
+with open(r'temp\Xy.pkl', 'wb') as pick:
+    pickle.dump(data_dict, pick)
 
 
-X, y, feature_names = get_bag_of_words(df, max_features = 10)
+with open(r'temp\Xy.pkl', 'rb') as pick:
+    data_dict = pickle.load(pick)
+    
+X = data_dict['X']        
+y = data_dict['y']
+feature_names = data_dict['feature_names']
 
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=10, stratify=y)
+
+
+# Model 
+
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.05, random_state=185, stratify=y)
 
 
 #max_leaf_nodes = 16
 #model = DecisionTreeClassifier(random_state=0, max_leaf_nodes=max_leaf_nodes).fit(X_train, y_train)
 
-model = GradientBoostingClassifier(loss='deviance', learning_rate=0.03,
+model = GradientBoostingClassifier(loss='deviance', learning_rate=0.05,
                                    n_estimators=150, subsample=0.8,
                                    criterion='friedman_mse', 
                                    min_samples_split=2, min_samples_leaf=1,
@@ -82,7 +80,4 @@ df_features_importances = pd.DataFrame({'Feature': feature_names,
                                         'Importance': model.feature_importances_})
 df_features_importances = df_features_importances.sort_values(by=['Importance'], ascending=False)[0:15]
 print(df_features_importances)
-
-
-
 
