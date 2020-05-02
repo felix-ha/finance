@@ -7,6 +7,8 @@ import pickle
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.utils.random import sample_without_replacement
+
 from torch import from_numpy, zeros
 
 from neural_net_architectures import training_SGD_RNN, RNN
@@ -18,16 +20,18 @@ from data_handler import get_imdb_data, get_word2vec
 
 # Hyperparameter
 seq_len = pad = 150
-vocab_size = dummy_dim = 300
-hidden_dim=100
+vocab_size = dummy_dim = 50
+hidden_dim_rnn=50
+hidden_dim_fc = 20
+drop_p=0.5
 n_layers=1
 output_size=1
 
-test_size = 0.1
-random_state = 123
-lr = 0.25
-n_epochs = 20
-batch_size = 25
+test_size = 0.25
+random_state = 124
+lr = 0.2
+n_epochs = 25
+batch_size = 125
 
 n_bins_calibration = 10
 
@@ -35,18 +39,10 @@ n_bins_calibration = 10
 
 # Data Handling
 
-# Create basic data frame that contains text and target  
-#df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class=50)  
-#df.to_pickle(r'temp\data.pkl')
-
-# Start feature enineering
-#df = pd.read_pickle(r'temp\data.pkl')
-
-#One hot dummy vectors
+# Start feature engineering
+#df = pd.read_pickle(r'temp\data_imdb_full.pkl')
 #X, y = get_word2vec(df, vocab_size, seq_len)
-
 #data_dict = {'X':X, 'y':y, 'vocab_size': vocab_size, 'seq_len': seq_len}
-
 #with open(r'temp\Xy.pkl', 'wb') as pick:
 #    pickle.dump(data_dict, pick)
 
@@ -58,6 +54,10 @@ X = data_dict['X']
 y = data_dict['y']
 vocab_size = data_dict['vocab_size']
 seq_len = data_dict['seq_len']
+
+ids = sample_without_replacement(n_population=len(y), n_samples=3000, random_state=5)
+X = X[ids]
+y = y[ids]
 
 
 
@@ -75,9 +75,10 @@ y_train_T = from_numpy(y_train).float()
 X_val_T = from_numpy(X_val).float()
 y_val_T = from_numpy(y_val).float()  
 
-hidden = zeros(1, seq_len, hidden_dim).float()
+hidden = zeros(1, seq_len, hidden_dim_rnn).float()
 
-model = RNN(input_size, seq_len, output_size=output_size, hidden_dim=hidden_dim, n_layers=n_layers)
+model = RNN(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
+            hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
 
 training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
                  lr=lr, hidden_0=hidden, n_epochs=n_epochs, batch_size=batch_size)
@@ -101,4 +102,4 @@ with open(r'temp\result.pkl', 'wb') as pick:
 
 
 
-#run_validation(n_bins = 10)
+run_validation(n_bins = 10)
