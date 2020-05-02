@@ -182,4 +182,4 @@ with open(r'temp\result.pkl', 'wb') as pick:
 
 
 
-run_validation(n_bins = 10)
+run_validation(n_bins = 10, n_bootstrap_samples=10)

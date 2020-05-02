@@ -6,6 +6,7 @@ plt.style.use('ggplot')
 import pickle
 from sklearn.metrics import accuracy_score, roc_curve, auc
 from sklearn.calibration import calibration_curve
+from scipy.stats import ranksums, mannwhitneyu, wilcoxon
 
 
 
@@ -45,27 +46,48 @@ def plot_hist(df_train, df_valid):
     
     
 
+def bootstrap_auc_ci(y_true, y_prob, n_bootstrap_samples):
+
+    y_true_samples = np.random.choice(y_true, (n_bootstrap_samples, len(y_true)), replace = True)
+    y_prob_samples = np.random.choice(y_prob, (n_bootstrap_samples, len(y_prob)), replace = True)
+    
+    aucs = [get_auc(y_true, y_prob) for (y_true, y_prob) in zip(y_true_samples,y_prob_samples)]
+    aucs = np.array(aucs)
+    aucs = aucs[~np.isnan(aucs)]
+    
+    aucs_mean = np.mean(aucs)
+    #aucs = np.sort(aucs)
+    
+    ci_bottom, ci_top = np.percentile(aucs, [2.5, 97.5])
+    
+    return ci_bottom, ci_top
 
 
+def get_auc(y_true, y_prob):
+    fpr, tpr, thresholds = roc_curve(y_true, y_prob)
+    return auc(fpr, tpr)
 
-def plot_box(df_result, name):
+
+def plot_box(df_result, name, n_bootstrap_samples):
     y_true = df_result['y_true']
     y_prob = df_result['y_prob']
     
     y_pred = np.where(y_prob > 0.5, 1, 0)
     accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
+
+    auroc = get_auc(y_true, y_prob)
     
-    fpr, tpr, thresholds = roc_curve(y_true, y_prob)
-    auroc = auc(fpr, tpr)
+    ci_bottom, ci_top =  bootstrap_auc_ci(y_true, y_prob, n_bootstrap_samples)
+
     
-    accuracy_benchmark = np.mean(y_true)
+    #accuracy_benchmark = np.mean(y_true)
     
     
     # Boxplot
     ax = sns.catplot(x="y_true", y="y_prob", kind="box", data=df_result)
     ax = sns.stripplot(x="y_true", y="y_prob",jitter=0.1, alpha=0.5, data=df_result)
     fig = ax.get_figure()
-    plt.title('Benchmark ACC: {:.3f} | ACC {:.3f}  | AUC: {:.3f}'.format( accuracy_benchmark, accuracy, auroc), fontsize=10)
+    plt.title('AUC: {:.3f} ( {:.3f} |  {:.3f} )'.format( auroc, ci_bottom, ci_top), fontsize=10)
     fig.suptitle(name, fontsize=8)
     plt.show()
     fig.savefig('plots/categorial_' + name +'.png', dpi=300, bbox_inches='tight')
@@ -126,7 +148,7 @@ def plot_losses(training_losses, valid_losses):
     fig.savefig('plots/training_summary.png', bbox_inches='tight')
     
     
-def run_validation(n_bins):
+def run_validation(n_bins, n_bootstrap_samples):
     with open(r'temp\result.pkl', 'rb') as pick:
         data_dict = pickle.load(pick)
               
@@ -144,8 +166,8 @@ def run_validation(n_bins):
 
     
     plot_hist(df_result_train, df_result_val)
-    plot_box(df_result_train, name_train)
-    plot_box(df_result_val, name_val)
+    plot_box(df_result_train, name_train, n_bootstrap_samples)
+    plot_box(df_result_val, name_val, n_bootstrap_samples)
     calibration_plot(y_true_train, y_prob_train, y_true_val, y_prob_val, n_bins=n_bins) 
     
     try:
@@ -156,7 +178,7 @@ def run_validation(n_bins):
         print("no losses found, no plot for losses created")
 
 if __name__ == '__main__':
-    run_validation(10)
+    run_validation(10, n_bootstrap_samples=10)
 
 
 #from matplotlib import pyplot as plt
