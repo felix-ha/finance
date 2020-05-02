@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
@@ -6,7 +5,6 @@ plt.style.use('ggplot')
 import pickle
 from sklearn.metrics import accuracy_score, roc_curve, auc
 from sklearn.calibration import calibration_curve
-from scipy.stats import ranksums, mannwhitneyu, wilcoxon
 
 
 
@@ -48,14 +46,23 @@ def plot_hist(df_train, df_valid):
 
 def bootstrap_auc_ci(y_true, y_prob, n_bootstrap_samples):
 
-    y_true_samples = np.random.choice(y_true, (n_bootstrap_samples, len(y_true)), replace = True)
-    y_prob_samples = np.random.choice(y_prob, (n_bootstrap_samples, len(y_prob)), replace = True)
+    aucs = np.empty(n_bootstrap_samples)
     
-    aucs = [get_auc(y_true, y_prob) for (y_true, y_prob) in zip(y_true_samples,y_prob_samples)]
+    for i in range(n_bootstrap_samples):
+       
+        ids = np.random.randint(low=0, high=len(y_true), size=len(y_true))
+        
+        y_true_samples = y_true[ids]
+        y_prob_samples = y_prob[ids]
+        
+        aucs[i] = get_auc(y_true_samples, y_prob_samples) 
+    
+    
+    
     aucs = np.array(aucs)
     aucs = aucs[~np.isnan(aucs)]
     
-    aucs_mean = np.mean(aucs)
+    #aucs_mean = np.mean(aucs)
     #aucs = np.sort(aucs)
     
     ci_bottom, ci_top = np.percentile(aucs, [2.5, 97.5])
@@ -178,7 +185,7 @@ def run_validation(n_bins, n_bootstrap_samples):
         print("no losses found, no plot for losses created")
 
 if __name__ == '__main__':
-    run_validation(10, n_bootstrap_samples=10)
+    run_validation(10, n_bootstrap_samples=1000)
 
 
 #from matplotlib import pyplot as plt
