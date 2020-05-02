@@ -19,19 +19,20 @@ from data_handler import get_imdb_data, get_word2vec
 
 
 # Hyperparameter
-seq_len = pad = 150
-vocab_size = dummy_dim = 50
-hidden_dim_rnn=50
-hidden_dim_fc = 20
-drop_p=0.5
+model_name = 'TestModel'
+seq_len = pad = 142
+vocab_size = dummy_dim = 300
+hidden_dim_rnn=150
+hidden_dim_fc = 50
+drop_p=0.2
 n_layers=1
 output_size=1
 
-test_size = 0.25
-random_state = 123
-lr = 0.25
+test_size = 0.15
+random_state = 12
+lr = 0.15
 n_epochs = 10
-batch_size = 125
+batch_size = 200
 
 n_bins_calibration = 10
 
@@ -174,7 +175,8 @@ df_result_train = pd.DataFrame(data = {'y_true': y_train, 'y_prob': y_prob_train
 
 
 result_dict = {'df_result_val': df_result_val, 'df_result_train': df_result_train,
-               'training_losses':training_losses, 'valid_losses': valid_losses}
+               'training_losses':training_losses, 'valid_losses': valid_losses,
+               'model_name':model_name}
 
 
 with open(r'temp\result.pkl', 'wb') as pick:
@@ -182,4 +184,4 @@ with open(r'temp\result.pkl', 'wb') as pick:
 
 
 
-run_validation(n_bins = 10, n_bootstrap_samples=10)
+run_validation(n_bins = n_bins_calibration, n_bootstrap_samples=500)
