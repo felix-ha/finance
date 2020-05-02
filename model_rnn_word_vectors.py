@@ -137,13 +137,13 @@ y_val_T = torch.from_numpy(y_val).float()
 # =============================================================================
 # hidden_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
 # cell_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
-# hidden_cell_0 = (hidden_0, cell_0)
+# hidden_0 = (hidden_0, cell_0)
 # 
 # model = LSTM(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
 #             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
 # 
 # training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
-#                  lr=lr, hidden_0=hidden_cell_0, n_epochs=n_epochs, batch_size=batch_size)
+#                  lr=lr, hidden_0=hidden_0, n_epochs=n_epochs, batch_size=batch_size)
 # =============================================================================
 
 
@@ -151,13 +151,13 @@ y_val_T = torch.from_numpy(y_val).float()
 
 hidden_0 = torch.zeros(2, seq_len, hidden_dim_rnn)
 cell_0 = torch.zeros(2, seq_len, hidden_dim_rnn)
-hidden_cell_0 = (hidden_0, cell_0)
+hidden_0 = (hidden_0, cell_0)
 
 model = BiLSTM(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
 
 training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
-                 lr=lr, hidden_0=hidden_cell_0, n_epochs=n_epochs, batch_size=batch_size)
+                 lr=lr, hidden_0=hidden_0, n_epochs=n_epochs, batch_size=batch_size)
 
 
 
@@ -165,8 +165,8 @@ training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_
 
 model.eval()
 with torch.no_grad():
-    y_prob_val = model.forward(X_val_T, hidden_cell_0).view(-1).detach().numpy()
-    y_prob_train = model.forward(X_train_T, hidden_cell_0).view(-1).detach().numpy()
+    y_prob_val = model.forward(X_val_T, hidden_0).view(-1).detach().numpy()
+    y_prob_train = model.forward(X_train_T, hidden_0).view(-1).detach().numpy()
 
 df_result_val = pd.DataFrame(data = {'y_true': y_val, 'y_prob': y_prob_val})
 df_result_train = pd.DataFrame(data = {'y_true': y_train, 'y_prob': y_prob_train})
