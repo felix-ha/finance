@@ -65,6 +65,32 @@ class RNN(nn.Module):
         return output
      
         
+class BiRNN(nn.Module):
+    def __init__(self, input_size, seq_len, output_size,
+                 hidden_dim_rnn, hidden_dim_fc, n_layers, drop_p):
+        super(BiRNN, self).__init__()
+        
+        self.rnn = nn.RNN(input_size, hidden_dim_rnn, n_layers, bidirectional=True)
+        self.fc1 = nn.Linear(hidden_dim_rnn*2, hidden_dim_fc)
+        self.relu1 = nn.ReLU()
+        self.drop1 = nn.Dropout(p=drop_p)
+        self.fc2 = nn.Linear(hidden_dim_fc, output_size)
+        
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x, hidden):
+        r_out, hidden = self.rnn(x, hidden)
+        r_out = torch.mean(r_out, dim=1)
+        hidden1 = self.fc1(r_out)
+        relu1 = self.relu1(hidden1)
+        drop1 = self.drop1(relu1)
+        output = self.fc2(drop1)
+
+        
+        output = self.sigmoid(output)
+
+        return output
+        
 class RNN_last_output(nn.Module):
     def __init__(self, input_size, seq_len, output_size, hidden_dim, n_layers):
         super(RNN_last_output, self).__init__()
@@ -104,6 +130,33 @@ class LSTM(nn.Module):
         return output
     
     
+class BiLSTM(nn.Module):
+    def __init__(self, input_size, seq_len, output_size,
+                 hidden_dim_rnn, hidden_dim_fc, n_layers, drop_p):
+        super(BiLSTM, self).__init__()
+        
+        self.rnn = nn.LSTM(input_size, hidden_dim_rnn, n_layers, bidirectional=True)
+        self.fc1 = nn.Linear(hidden_dim_rnn*2, hidden_dim_fc)
+        self.relu1 = nn.ReLU()
+        self.drop1 = nn.Dropout(p=drop_p)
+        self.fc2 = nn.Linear(hidden_dim_fc, output_size)
+        
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x, hidden):
+        r_out, hidden = self.rnn(x, hidden)
+        r_out = torch.mean(r_out, dim=1)
+        hidden1 = self.fc1(r_out)
+        relu1 = self.relu1(hidden1)
+        drop1 = self.drop1(relu1)
+        output = self.fc2(drop1)
+
+        
+        output = self.sigmoid(output)
+
+        return output
+    
+    
 class GRU(nn.Module):
     def __init__(self, input_size, seq_len, output_size,
                  hidden_dim_rnn, hidden_dim_fc, n_layers, drop_p):
@@ -111,6 +164,33 @@ class GRU(nn.Module):
         
         self.rnn = nn.GRU(input_size, hidden_dim_rnn, n_layers)
         self.fc1 = nn.Linear(hidden_dim_rnn, hidden_dim_fc)
+        self.relu1 = nn.ReLU()
+        self.drop1 = nn.Dropout(p=drop_p)
+        self.fc2 = nn.Linear(hidden_dim_fc, output_size)
+        
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x, hidden):
+        r_out, hidden = self.rnn(x, hidden)
+        r_out = torch.mean(r_out, dim=1)
+        hidden1 = self.fc1(r_out)
+        relu1 = self.relu1(hidden1)
+        drop1 = self.drop1(relu1)
+        output = self.fc2(drop1)
+
+        
+        output = self.sigmoid(output)
+
+        return output
+    
+
+class BiGRU(nn.Module):
+    def __init__(self, input_size, seq_len, output_size,
+                 hidden_dim_rnn, hidden_dim_fc, n_layers, drop_p):
+        super(BiGRU, self).__init__()
+        
+        self.rnn = nn.GRU(input_size, hidden_dim_rnn, n_layers, bidirectional=True)
+        self.fc1 = nn.Linear(hidden_dim_rnn*2, hidden_dim_fc)
         self.relu1 = nn.ReLU()
         self.drop1 = nn.Dropout(p=drop_p)
         self.fc2 = nn.Linear(hidden_dim_fc, output_size)

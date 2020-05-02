@@ -11,7 +11,7 @@ from sklearn.utils.random import sample_without_replacement
 
 import torch
 
-from neural_net_architectures import training_SGD_RNN, RNN, LSTM, GRU
+from neural_net_architectures import training_SGD_RNN, RNN, LSTM, GRU, BiRNN, BiGRU, BiLSTM
 
 from validation import run_validation
 from data_handler import get_imdb_data, get_word2vec
@@ -29,7 +29,7 @@ output_size=1
 
 test_size = 0.25
 random_state = 123
-lr = 0.2
+lr = 0.25
 n_epochs = 10
 batch_size = 125
 
@@ -80,40 +80,93 @@ X_val_T = torch.from_numpy(X_val).float()
 y_val_T = torch.from_numpy(y_val).float() 
 
  
-hidden_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
 
-# LSTM 
-#cell_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
-#hidden_cell_0 = (hidden_0, cell_0)
+### RNN 
 
-#model = LSTM(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
-#            hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
+# =============================================================================
+# hidden_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
+# 
+# model = RNN(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
+#             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
+# 
+# training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
+#                  lr=lr, hidden_0=hidden_0, n_epochs=n_epochs, batch_size=batch_size)
+# =============================================================================
 
-#training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
-#                 lr=lr, hidden_0=hidden_cell_0, n_epochs=n_epochs, batch_size=batch_size)
+### BiRNN 
+
+# =============================================================================
+# hidden_0 = torch.zeros(2, seq_len, hidden_dim_rnn)
+#  
+# model = BiRNN(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
+#             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
+# 
+# training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
+#                  lr=lr, hidden_0=hidden_0, n_epochs=n_epochs, batch_size=batch_size)
+# =============================================================================
 
 
+### GRU
 
-# RNN / GRU
+# =============================================================================
+# hidden_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
+# 
+# model = GRU(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
+#             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
+# 
+# training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
+#                  lr=lr, hidden_0=hidden_0, n_epochs=n_epochs, batch_size=batch_size)
+# =============================================================================
 
-#hidden = zeros(1, seq_len, hidden_dim_rnn).float()
 
-#model = RNN(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
-#            hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
+### BiGRU
 
-model = GRU(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
+# =============================================================================
+# hidden_0 = torch.zeros(2, seq_len, hidden_dim_rnn)
+# 
+# model = BiGRU(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
+#             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
+# 
+# training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
+#                  lr=lr, hidden_0=hidden_0, n_epochs=n_epochs, batch_size=batch_size)
+# =============================================================================
+
+
+### LSTM 
+
+# =============================================================================
+# hidden_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
+# cell_0 = torch.zeros(1, seq_len, hidden_dim_rnn)
+# hidden_cell_0 = (hidden_0, cell_0)
+# 
+# model = LSTM(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
+#             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
+# 
+# training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
+#                  lr=lr, hidden_0=hidden_cell_0, n_epochs=n_epochs, batch_size=batch_size)
+# =============================================================================
+
+
+### BiLSTM 
+
+hidden_0 = torch.zeros(2, seq_len, hidden_dim_rnn)
+cell_0 = torch.zeros(2, seq_len, hidden_dim_rnn)
+hidden_cell_0 = (hidden_0, cell_0)
+
+model = BiLSTM(input_size, seq_len, output_size=output_size, hidden_dim_rnn=hidden_dim_rnn,
             hidden_dim_fc=hidden_dim_fc, drop_p=drop_p, n_layers=n_layers)
 
 training_losses, valid_losses = training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T,
-                 lr=lr, hidden_0=hidden_0, n_epochs=n_epochs, batch_size=batch_size)
+                 lr=lr, hidden_0=hidden_cell_0, n_epochs=n_epochs, batch_size=batch_size)
+
 
 
 
 
 model.eval()
 with torch.no_grad():
-    y_prob_val = model.forward(X_val_T, hidden_0).view(-1).detach().numpy()
-    y_prob_train = model.forward(X_train_T, hidden_0).view(-1).detach().numpy()
+    y_prob_val = model.forward(X_val_T, hidden_cell_0).view(-1).detach().numpy()
+    y_prob_train = model.forward(X_train_T, hidden_cell_0).view(-1).detach().numpy()
 
 df_result_val = pd.DataFrame(data = {'y_true': y_val, 'y_prob': y_prob_val})
 df_result_train = pd.DataFrame(data = {'y_true': y_train, 'y_prob': y_prob_train})
