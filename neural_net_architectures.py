@@ -316,7 +316,23 @@ def training_SGD_RNN(model, X_train_T, y_train_T, X_val_T, y_val_T, hidden_0,
     valid_dl = DataLoader(valid_ds, batch_size=batch_size * 2)
     
     loss_func = nn.BCELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr = lr)   
+    
+    optimizer = torch.optim.SGD(model.parameters(), lr = lr)  
+    
+# =============================================================================
+#     optimizer = torch.optim.Adagrad(model.parameters(), lr=lr, lr_decay=0,
+#                                     weight_decay=0, initial_accumulator_value=0, eps=1e-10)
+# =============================================================================
+    
+# =============================================================================
+#     optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999),
+#                                  eps=1e-08, weight_decay=0, amsgrad=False)
+# =============================================================================
+    
+# =============================================================================
+#     optimizer = torch.optim.RMSprop(model.parameters(), lr=lr, alpha=0.99, eps=1e-08, 
+#                                     weight_decay=0, momentum=0, centered=False)
+# =============================================================================
    
     
     model.train()
