@@ -85,6 +85,15 @@ max_features = dummy_dim = 250
 #     pickle.dump(data_dict, pick)
 # =============================================================================
 
+ # Creating data set and features: Tf-Idf
+df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class = None)  
+df.to_pickle(r'temp\data.pkl')
+df = pd.read_pickle(r'temp\data.pkl')
+X, y, feature_names = get_tfidf(df, max_features = max_features)
+data_dict = {'X':X, 'y':y, 'feature_names':feature_names}
+with open(r'temp\Xy.pkl', 'wb') as pick:
+    pickle.dump(data_dict, pick)
+
 
 # Loading data set
 with open(r'temp\Xy.pkl', 'rb') as pick:
@@ -97,11 +106,16 @@ feature_names = data_dict['feature_names']
 
 
 
-model = AutoEncoder(input_size = dummy_dim, code_size=2)
+model = AutoEncoder(input_size = dummy_dim, 
+                    hidden_size_1 = 150, hidden_size_2 = 75, hidden_size_3 = 35, 
+                    code_size=2)
 
 
 
-train_size = 0.8
+
+
+
+train_size = 0.98
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=1-train_size, random_state=1, stratify=y)
 
 X_train_T = torch.from_numpy(X_train).float()
