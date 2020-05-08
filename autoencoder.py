@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 import pandas as pd
-from data_handler import get_imdb_data, get_bag_of_words
+from data_handler import get_imdb_data, get_bag_of_words, get_tfidf
 import pickle
 from sklearn.model_selection import train_test_split
 from neural_net_architectures import  training_SGD_Autoencoder
@@ -74,31 +74,69 @@ lr = 0.1
 loss_func = nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters(), lr = lr)   
 training_losses, valid_losses = training_SGD_Autoencoder(model, X_train_T, y_train_T,  X_val_T, y_val_T, 
-              n_epochs=20, batch_size = 40, optimizer = optimizer, loss_func = loss_func)
+              n_epochs=200, batch_size = 250, optimizer = optimizer, loss_func = loss_func)
     
     
 model.eval()
-X_pred_val = model.forward(X_val_T)
-X_pred_train = model.forward(X_train_T)
+with torch.no_grad():
+    X_pred_val = model.forward(X_val_T)
+    X_pred_train = model.forward(X_train_T)
+    X_train_code = model.encode(X_train_T).numpy()
+    X_val_code = model.encode(X_val_T).numpy()
 
 
 
-plot_losses(training_losses, valid_losses)
-
-
-#df_result_val = pd.DataFrame(data = {'y_true': y_val, 'y_prob': y_prob_val})
-#df_result_train = pd.DataFrame(data = {'y_true': y_train, 'y_prob': y_prob_train})
+#plot_losses(training_losses, valid_losses)
 
 
 
-#result_dict = {'df_result_val': df_result_val, 'df_result_train': df_result_train,
- #              'training_losses':training_losses, 'valid_losses': valid_losses}
+data = {'X1': X_train_code[:,0], 'X2': X_train_code[:,1], 'y': y_train}
+df = pd.DataFrame(data)
+ax = sns.scatterplot(x="X1", y="X2", hue="y", data=df)
 
 
-#with open(r'temp\result.pkl', 'wb') as pick:
-#    pickle.dump(result_dict, pick)
+data = {'X1': X_val_code[:,0], 'X2': X_val_code[:,1], 'y': y_val}
+df = pd.DataFrame(data)
+ax = sns.scatterplot(x="X1", y="X2", hue="y", data=df)
 
 
 
-#run_validation(n_bins = 10, n_bootstrap_samples=100)
 
+# Training on the encoded features:
+# =============================================================================
+# X_train = X_train_code
+# X_val = X_val_code
+# 
+# model = GradientBoostingClassifier(loss='deviance', learning_rate=0.05,
+#                                    n_estimators=100, subsample=0.8,
+#                                    criterion='friedman_mse', 
+#                                    min_samples_split=2, min_samples_leaf=1,
+#                                    min_weight_fraction_leaf=0.0,
+#                                    max_depth=3, 
+#                                    min_impurity_decrease=0.1, 
+#                                    min_impurity_split=None, 
+#                                    init=None, random_state=None, 
+#                                    max_features=None, verbose=0, 
+#                                    max_leaf_nodes=None, warm_start=False,
+#                                    presort='deprecated', validation_fraction=0.1,
+#                                    n_iter_no_change=None, tol=0.0001, ccp_alpha=0.0)
+# 
+# model.fit(X_train, y_train)
+# 
+# y_prob_val = model.predict_proba(X_val)[:,1]
+# y_prob_train = model.predict_proba(X_train)[:,1]
+# 
+# 
+# df_result_val = pd.DataFrame(data = {'y_true': y_val, 'y_prob': y_prob_val})
+# df_result_train = pd.DataFrame(data = {'y_true': y_train, 'y_prob': y_prob_train})
+# df_result_val.to_pickle('temp/result_val.pkl')
+# df_result_train.to_pickle('temp/result_train.pkl')
+# 
+# run_validation(n_bins = 10, n_bootstrap_samples=1000)
+# 
+# 
+# df_features_importances = pd.DataFrame({'Feature': ['X1', 'X2'],
+#                                         'Importance': model.feature_importances_})
+# df_features_importances = df_features_importances.sort_values(by=['Importance'], ascending=False)[0:15]
+# print(df_features_importances)
+# =============================================================================
