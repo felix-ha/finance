@@ -9,7 +9,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from datetime import date, timedelta
 from sklearn.utils import shuffle
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.porter import *
@@ -406,6 +406,29 @@ def get_word2vec_pretrained(df, vocab_size, seq_len, pretrained_model_name = "gl
     
     return X, y
     
+
+
+def get_tfidf(df, max_features, verbose=False):
+    vect = TfidfVectorizer(max_features=max_features, stop_words="english")
+    bag_of_words = vect.fit_transform(df['text'].values)  
+  
+    feature_names = vect.get_feature_names()
+         
+    X = bag_of_words
+    y = df['target'].values
+    
+    
+    if verbose:
+        print("Vocabulary size: {}".format(len(vect.vocabulary_)))
+        print("Vocabulary content:\n {}".format(vect.vocabulary_))
+        print("bag_of_words: {}".format(repr(bag_of_words)))
+        print("Dense representation of bag_of_words:\n{}".format(
+        bag_of_words.toarray()))
+        print("Number of features: {}".format(len(feature_names)))
+        print("Features (first 20):\n{}".format(feature_names[0:20]))
+             
+    
+    return X, y, feature_names
 
 
 if __name__ == '__main__':
