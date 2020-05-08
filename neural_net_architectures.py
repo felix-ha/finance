@@ -213,7 +213,7 @@ class BiGRU(nn.Module):
            
     
 def training_SGD(model, X_train_T, y_train_T, X_val_T, y_val_T,
-                 lr, n_epochs, batch_size):
+              n_epochs, batch_size, optimizer, loss_func):
     
     training_losses = np.empty(n_epochs)
     valid_losses = np.empty(n_epochs)

@@ -3,14 +3,15 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 
-from torch import from_numpy
+from torch import from_numpy, optim
+from torch import nn
 
 from neural_net_architectures import FC_2_Layers_Binary_Output, training_SGD
 from validation import run_validation
 from data_handler import get_bag_of_words
 import pickle
 
-max_features = 250
+max_features = 10
 #df = pd.read_pickle(r'temp\data_imdb_full.pkl')
 #X, y, feature_names = get_bag_of_words(df, max_features = max_features)
 
@@ -35,11 +36,12 @@ y_train_T = from_numpy(y_train).float()
 X_val_T = from_numpy(X_val).float()
 y_val_T = from_numpy(y_val).float()
 
-
+lr = 0.1
 model = FC_2_Layers_Binary_Output(max_features, 200, 75, 0.5)
-
+loss_func = nn.BCELoss()
+optimizer = optim.SGD(model.parameters(), lr = lr)   
 training_losses, valid_losses = training_SGD(model, X_train_T, y_train_T,  X_val_T, y_val_T, 
-             lr = 0.1, n_epochs=20, batch_size = 250)
+              n_epochs=20, batch_size = 250, optimizer = optimizer, loss_func = loss_func)
     
     
 model.eval()
