@@ -7,35 +7,76 @@ from data_handler import get_imdb_data, get_bag_of_words, get_tfidf
 import pickle
 from sklearn.model_selection import train_test_split
 from neural_net_architectures import  training_SGD_Autoencoder
-from validation import plot_losses
+from validation import plot_losses, run_validation
+from sklearn.ensemble import GradientBoostingClassifier
+
+import seaborn as sns
 
 
 class AutoEncoder(nn.Module):
-        def __init__(self, input_size, code_size):
+        def __init__(self, input_size, hidden_size_1, hidden_size_2, hidden_size_3, code_size):
             super(AutoEncoder, self).__init__()
             self.input_size = input_size
             self.code_size = code_size
+            self.hidden_size_1 = hidden_size_1
+            self.hidden_size_2 = hidden_size_2
+            self.hidden_size_3 = hidden_size_3
             
-            self.fc_encoder = nn.Linear(self.input_size,self.code_size)
-            self.fc_decoder = nn.Linear(self.code_size, self.input_size)
+            self.fc1_encoder = nn.Linear(self.input_size, self.hidden_size_1)
+            self.fc2_encoder = nn.Linear(self.hidden_size_1, self.hidden_size_2)
+            self.fc3_encoder = nn.Linear(self.hidden_size_2, self.hidden_size_3)
+            self.fc4_encoder = nn.Linear(self.hidden_size_3, self.code_size)
             
+            self.fc1_decoder = nn.Linear(self.code_size, self.hidden_size_3)
+            self.fc2_decoder = nn.Linear(self.hidden_size_3, self.hidden_size_2)
+            self.fc3_decoder = nn.Linear(self.hidden_size_2, self.hidden_size_1)
+            self.fc4_decoder = nn.Linear(self.hidden_size_1, self.input_size)           
+                        
             self.tanh = nn.Tanh()
             
-         
-         
+        def encode(self, x):
+            hidden1 = self.fc1_encoder(x)
+            hidden1_tanh = self.tanh(hidden1)
+            
+            hidden2 = self.fc2_encoder(hidden1_tanh)
+            hidden2_tanh = self.tanh(hidden2)
+            
+            hidden3 = self.fc3_encoder(hidden2_tanh)
+            hidden3_tanh = self.tanh(hidden3)
+            
+            code = self.fc4_encoder(hidden3_tanh)
+            code = self.tanh(code)
+            
+            return code
+        
+        def decode(self, code):
+            
+            hidden1 = self.fc1_decoder(code)
+            hidden1_tanh = self.tanh(hidden1)
+            
+            hidden2 = self.fc2_decoder(hidden1_tanh)
+            hidden2_tanh = self.tanh(hidden2)
+            
+            hidden3 = self.fc3_decoder(hidden2_tanh)
+            hidden3_tanh = self.tanh(hidden3)
+            
+            output = self.fc4_decoder(hidden3_tanh)
+            output = self.tanh(output)
+            
+            return output
+            
+            
             
         def forward(self, x):
-            hidden1 = self.fc_encoder(x)
-            code = self.tanh(hidden1)
-            output = self.fc_decoder(code)
-            
-
+            code = self.encode(x)
+            output = self.decode(code)
+           
             return output
         
-max_features = dummy_dim = 10  
- # Creating data set and features 
+max_features = dummy_dim = 250
+ # Creating data set and features: Bag of words
 # =============================================================================
-# df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class=25)  
+# df = get_imdb_data(data_dir=r'data\aclImdb', N_per_class = None)  
 # df.to_pickle(r'temp\data.pkl')
 # df = pd.read_pickle(r'temp\data.pkl')
 # X, y, feature_names = get_bag_of_words(df, max_features = max_features)
